@@ -653,11 +653,9 @@ export const inviteJointHolder = async (req, res) => {
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return res
-        .status(409)
-        .json({
-          message: "A Well Trust Bank account already exists with that email",
-        });
+      return res.status(409).json({
+        message: "A Well Trust Bank account already exists with that email",
+      });
     }
 
     const existingInvite = await JointInvite.findOne({
@@ -666,12 +664,10 @@ export const inviteJointHolder = async (req, res) => {
       status: "pending",
     });
     if (existingInvite) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "There's already a pending invite sent to that email for this account",
-        });
+      return res.status(400).json({
+        message:
+          "There's already a pending invite sent to that email for this account",
+      });
     }
 
     const token = JointInvite.generateToken();
@@ -730,6 +726,7 @@ export const getAccountHolders = async (req, res) => {
     return res.json({
       holders: holders.map((h) => ({ user: h.user, role: h.role })),
       pendingInvites: pendingInvites.map((i) => ({
+        _id: i._id,
         name: i.name,
         email: i.email,
         expiresAt: i.expiresAt,
@@ -737,5 +734,33 @@ export const getAccountHolders = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: "Could not fetch account holders" });
+  }
+};
+
+export const cancelJointInvite = async (req, res) => {
+  try {
+    const invite = await JointInvite.findOne({
+      _id: req.params.inviteId,
+      account: req.account?._id,
+      status: "pending",
+    });
+    if (!invite) {
+      return res.status(404).json({ message: "Pending invite not found" });
+    }
+
+    await JointInvite.deleteOne({ _id: invite._id });
+
+    // If this was the only thing making the account "joint" — no accepted
+    // co-holder and no other pending invites — revert isJoint back to false.
+    const holderCount = await AccountHolder.countDocuments({ account: invite.account });
+    const remainingPendingInvites = await JointInvite.countDocuments({ account: invite.account, status: "pending" });
+
+    if (holderCount < 2 && remainingPendingInvites === 0) {
+      await Account.findByIdAndUpdate(invite.account, { isJoint: false });
+    }
+
+    return res.json({ message: "Invite cancelled" });
+  } catch (error) {
+    return res.status(500).json({ message: "Could not cancel invite" });
   }
 };

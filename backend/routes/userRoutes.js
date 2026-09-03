@@ -38,6 +38,7 @@ import {
 import {
   inviteJointHolder,
   getAccountHolders,
+  cancelJointInvite,
 } from "../controllers/authController.js";
 
 const router = express.Router();
@@ -57,6 +58,7 @@ router.post("/kyc", uploadKycDocument, uploadKyc);
 
 router.post("/account/invite-joint-holder", inviteJointHolder);
 router.get("/account/holders", getAccountHolders);
+router.delete("/account/invite-joint-holder/:inviteId", cancelJointInvite);
 
 router.post("/avatar", uploadAvatarImage, uploadAvatar);
 router.get("/limits", getAccountLimits);

@@ -78,6 +78,15 @@ const AccountHoldersCard = () => {
     }
   };
 
+  const cancelInvite = async (inviteId) => {
+    try {
+      await api.delete(`/users/account/invite-joint-holder/${inviteId}`);
+      load();
+    } catch (err) {
+      setError("Could not cancel invite");
+    }
+  };
+
   if (loading) {
     return (
       <div className="card p-6 text-sm text-slate-400">
@@ -104,13 +113,15 @@ const AccountHoldersCard = () => {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => setShowForm((s) => !s)}
-          className="btn-secondary !py-2 !px-3 text-sm flex items-center gap-1.5 shrink-0"
-        >
-          {showForm ? <X size={15} /> : <Plus size={15} />}{" "}
-          {showForm ? "Cancel" : "Invite"}
-        </button>
+        {holders.length < 2 && pendingInvites.length === 0 && (
+          <button
+            onClick={() => setShowForm((s) => !s)}
+            className="btn-secondary !py-2 !px-3 text-sm flex items-center gap-1.5 shrink-0"
+          >
+            {showForm ? <X size={15} /> : <Plus size={15} />}{" "}
+            {showForm ? "Cancel" : "Invite"}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -192,16 +203,27 @@ const AccountHoldersCard = () => {
 
         {pendingInvites.map((invite) => (
           <div
-            key={invite.email}
-            className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0"
+            key={invite._id}
+            className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0 gap-2"
           >
-            <div>
-              <p className="text-sm font-medium text-navy-900">{invite.name}</p>
-              <p className="text-xs text-slate-400">{invite.email}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-navy-900 truncate">
+                {invite.name}
+              </p>
+              <p className="text-xs text-slate-400 truncate">{invite.email}</p>
             </div>
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full shrink-0">
-              <Clock3 size={10} /> Invite Pending
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+                <Clock3 size={10} /> Pending
+              </span>
+              <button
+                onClick={() => cancelInvite(invite._id)}
+                className="text-slate-300 hover:text-red-500 transition"
+                title="Cancel invite"
+              >
+                <X size={15} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
