@@ -32,8 +32,15 @@ export const getDashboard = async (req, res) => {
         .json({ message: "No account found for this user" });
     }
 
+    // Show activity for the whole shared ACCOUNT, not just this person's own
+    // transactions — so a joint holder sees the other holder's activity too.
     const recentTransactions = await Transaction.find({
-      $or: [{ sender: user._id }, { receiver: user._id }],
+      $or: [
+        { sender: user._id },
+        { receiver: user._id },
+        { senderAccount: account._id },
+        { receiverAccount: account._id },
+      ],
     })
       .sort({ createdAt: -1 })
       .limit(5)
@@ -48,7 +55,7 @@ export const getDashboard = async (req, res) => {
     const spending = await Transaction.aggregate([
       {
         $match: {
-          sender: user._id,
+          $or: [{ sender: user._id }, { senderAccount: account._id }],
           createdAt: { $gte: startOfMonth },
           status: "completed",
         },
