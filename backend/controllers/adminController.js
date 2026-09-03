@@ -171,6 +171,15 @@ export const approveUser = async (req, res) => {
     user.status = "active";
     await user.save();
 
+    // Also activate the linked Account — a person being approved should
+    // activate the account they're on (for a joint account, approving
+    // EITHER holder activates the shared account for both).
+    const account = await getAccountForUser(user._id);
+    if (account && account.status === "pending") {
+      account.status = "active";
+      await account.save();
+    }
+
     await AuditLog.create({
       admin: req.user._id,
       action: "approve_user",
@@ -192,11 +201,12 @@ export const approveUser = async (req, res) => {
       html: approvalEmailTemplate(user.firstName, "active"),
     });
 
-    return res.json({ message: "User approved", user });
+    return res.json({ message: "User approved", user, account });
   } catch (error) {
     return res.status(500).json({ message: "Could not approve user" });
   }
 };
+
 
 // @route PUT /api/admin/users/:id/reject
 export const rejectUser = async (req, res) => {

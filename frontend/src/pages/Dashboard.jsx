@@ -113,8 +113,10 @@ const Dashboard = () => {
             >
               {showBalance ? formatMoney(balance, currency) : "•••••••"}
             </p>
-            <p className="text-xs text-gold-300 mt-1 relative">
-              {data?.user?.accountType?.replace("_", " ")} account · {currency}
+            <p className="text-xs text-gold-300 mt-1 relative capitalize">
+              {data?.user?.isJoint ? "Joint " : ""}
+              {data?.user?.accountType?.replace("_", " ") || "account"} ·{" "}
+              {currency}
             </p>
             {lastUpdated && (
               <p className="text-[11px] text-slate-400 mt-1 relative">

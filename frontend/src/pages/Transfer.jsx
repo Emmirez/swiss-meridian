@@ -192,7 +192,7 @@ const Transfer = () => {
             onClick={() => setMode("internal")}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition ${mode === "internal" ? "bg-navy text-white" : "text-slate-500"}`}
           >
-            <ArrowLeftRight size={15} /> Swiss Meridian Transfer
+            <ArrowLeftRight size={15} /> Internal Transfer
           </button>
           <button
             onClick={() => setMode("external")}
