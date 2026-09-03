@@ -1,5 +1,10 @@
 import express from "express";
-import { protect, requireActive, requireNotFrozen, requireKycApproved } from "../middleware/auth.js";
+import {
+  protect,
+  requireActive,
+  requireNotFrozen,
+  requireKycApproved,
+} from "../middleware/auth.js";
 import { uploadKycDocument } from "../middleware/upload.js";
 import { uploadAvatarImage } from "../middleware/uploadAvatar.js";
 import {
@@ -30,6 +35,10 @@ import {
   updateCardSettings,
   toggleFreeze,
 } from "../controllers/cardController.js";
+import {
+  inviteJointHolder,
+  getAccountHolders,
+} from "../controllers/authController.js";
 
 const router = express.Router();
 
@@ -45,6 +54,9 @@ router.delete("/notifications", deleteAllNotifications);
 router.delete("/notifications/:id", deleteNotification);
 router.get("/kyc", getKycStatus);
 router.post("/kyc", uploadKycDocument, uploadKyc);
+
+router.post("/account/invite-joint-holder", inviteJointHolder);
+router.get("/account/holders", getAccountHolders);
 
 router.post("/avatar", uploadAvatarImage, uploadAvatar);
 router.get("/limits", getAccountLimits);

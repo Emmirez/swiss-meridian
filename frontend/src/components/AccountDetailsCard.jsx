@@ -1,8 +1,8 @@
 import { Landmark, Copy, Check } from "lucide-react";
 import { useState } from "react";
 
-const WELL_TRUST_SWIFT = "WTBKUS33";
-const WELL_TRUST_ADDRESS = "Rue des Alpes 14, 1201 Geneva, Switzerland";
+const SWISS_MERIDIAN_SWIFT = "SMBKCHZZ";
+const SWISS_MERIDIAN_ADDRESS = "Rue des Alpes 14, 1201 Geneva, Switzerland";
 
 const Row = ({ label, value, copyable }) => {
   const [copied, setCopied] = useState(false);
@@ -63,7 +63,11 @@ const AccountDetailsCard = ({ user }) => {
         <Row label="Account Number" value={user?.accountNumber} copyable />
         <Row
           label="Account Type"
-          value={user?.accountType ? user.accountType.replace("_", " ") : null}
+          value={
+            user?.accountType
+              ? `${user.isJoint ? "Joint " : ""}${user.accountType.replace("_", " ")}`
+              : null
+          }
         />
         <Row label="Currency" value={user?.currency} />
         <Row label="Your Address" value={fullAddress} />
@@ -75,8 +79,8 @@ const AccountDetailsCard = ({ user }) => {
         </p>
         <Row label="Bank Name" value="Swiss Meridian Bank" />
         <Row label="Routing Number" value={user?.routingNumber} copyable />
-        <Row label="SWIFT / BIC Code" value={WELL_TRUST_SWIFT} copyable />
-        <Row label="Bank Address" value={WELL_TRUST_ADDRESS} />
+        <Row label="SWIFT / BIC Code" value={SWISS_MERIDIAN_SWIFT} copyable />
+        <Row label="Bank Address" value={SWISS_MERIDIAN_ADDRESS} />
       </div>
     </div>
   );

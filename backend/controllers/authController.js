@@ -3,7 +3,11 @@ import User from "../models/User.js";
 import Account from "../models/Account.js";
 import AccountHolder from "../models/AccountHolder.js";
 import JointInvite from "../models/JointInvite.js";
-import { generateAccountNumber, generateOtp } from "../utils/generateIds.js";
+import {
+  generateAccountNumber,
+  generateOtp,
+  BANK_ROUTING_NUMBER,
+} from "../utils/generateIds.js";
 import { generateToken } from "../utils/generateToken.js";
 import {
   sendEmail,
@@ -120,6 +124,7 @@ export const register = async (req, res) => {
     // 2. Create the Account (the actual bank account)
     const account = await Account.create({
       accountNumber,
+      routingNumber: BANK_ROUTING_NUMBER,
       accountType,
       isJoint: !!isJoint,
       currency: currency || "USD",
@@ -618,5 +623,119 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error("Reset password error:", error);
     return res.status(500).json({ message: "Could not reset password" });
+  }
+};
+
+// @route POST /api/users/account/invite-joint-holder
+// Lets an EXISTING primary/joint holder invite someone new to their account,
+// reusing the same JointInvite + email flow as registration-time joint setup.
+export const inviteJointHolder = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    const account = req.account;
+
+    if (!account) {
+      return res
+        .status(404)
+        .json({ message: "No account found for your login" });
+    }
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and email are required" });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res
+        .status(400)
+        .json({ message: "Please enter a valid email address" });
+    }
+    if (email.toLowerCase() === req.user.email.toLowerCase()) {
+      return res.status(400).json({ message: "You cannot invite yourself" });
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({
+          message: "A Well Trust Bank account already exists with that email",
+        });
+    }
+
+    const existingInvite = await JointInvite.findOne({
+      account: account._id,
+      email: email.toLowerCase(),
+      status: "pending",
+    });
+    if (existingInvite) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "There's already a pending invite sent to that email for this account",
+        });
+    }
+
+    const token = JointInvite.generateToken();
+    const invite = await JointInvite.create({
+      account: account._id,
+      invitedBy: req.user._id,
+      name,
+      email: email.toLowerCase(),
+      token,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    // Mark the account as joint now that an invite has gone out — this
+    // reflects intent immediately rather than waiting for acceptance.
+    if (!account.isJoint) {
+      account.isJoint = true;
+      await account.save();
+    }
+
+    await sendEmail({
+      to: invite.email,
+      toName: invite.name,
+      subject: `You've been invited to a joint account on Well Trust Bank`,
+      html: jointInviteEmailTemplate({
+        inviteeName: invite.name,
+        primaryName: `${req.user.firstName} ${req.user.lastName}`,
+        accountType: account.accountType,
+        inviteUrl: `https://welltrustapp.com/joint-signup?token=${token}`,
+      }),
+    });
+
+    return res.status(201).json({ message: "Invite sent", invite });
+  } catch (error) {
+    console.error("Invite joint holder error:", error);
+    return res.status(500).json({ message: "Could not send invite" });
+  }
+};
+
+// @route GET /api/users/account/holders
+// Lists everyone currently attached to the logged-in user's account.
+export const getAccountHolders = async (req, res) => {
+  try {
+    if (!req.account) {
+      return res
+        .status(404)
+        .json({ message: "No account found for your login" });
+    }
+    const holders = await AccountHolder.find({
+      account: req.account._id,
+    }).populate("user", "firstName lastName email kycStatus");
+    const pendingInvites = await JointInvite.find({
+      account: req.account._id,
+      status: "pending",
+    });
+
+    return res.json({
+      holders: holders.map((h) => ({ user: h.user, role: h.role })),
+      pendingInvites: pendingInvites.map((i) => ({
+        name: i.name,
+        email: i.email,
+        expiresAt: i.expiresAt,
+      })),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Could not fetch account holders" });
   }
 };
