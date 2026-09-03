@@ -4,6 +4,7 @@ import api from "../api/axios";
 import TopBar from "../components/TopBar";
 import AccountDetailsCard from "../components/AccountDetailsCard";
 import KycStatusCard from "../components/KycStatusCard";
+import AccountHoldersCard from "../components/AccountHoldersCard";
 import { compressImage } from "../utils/compressImage";
 import { useAuth } from "../context/AuthContext";
 import { useUserMenu } from "../components/DashboardLayout";
@@ -199,7 +200,7 @@ const Profile = () => {
         </div>
 
         <KycStatusCard />
-
+        <AccountHoldersCard />
         <AccountDetailsCard user={fullUser} />
       </div>
     </div>
