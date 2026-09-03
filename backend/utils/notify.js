@@ -1,5 +1,5 @@
 import Notification from "../models/Notification.js";
-import { sendEmail, transactionEmailTemplate } from "./sendEmail.js";
+import { sendEmail, transactionEmailTemplate, generalEmailTemplate } from "./sendEmail.js";
 import { sendSms } from "./sendSms.js";
 import { getIO } from "../socket.js";
 
@@ -65,19 +65,26 @@ export const notifyTransaction = async (
   return notification;
 };
 
+
 /**
- * Generic in-app-only notification (e.g. account approved, security alert)
+ * Generic notification across in-app, email, and SMS channels. The caller's
+ * email/sms flags mark a notification as eligible for that channel; the
+ * user's own saved Notification Preferences have final say on whether it
+ * actually sends.
  */
 export const notifyGeneral = async (
   user,
   { title, message, type = "general", email = false, sms = false },
 ) => {
+  const shouldEmail = email && (user.notificationPrefs?.email ?? true);
+  const shouldSms = sms && (user.notificationPrefs?.sms ?? true);
+
   const notification = await Notification.create({
     user: user._id,
     title,
     message,
     type,
-    channels: { email, sms, inApp: true },
+    channels: { email: shouldEmail, sms: shouldSms, inApp: true },
   });
 
   try {
@@ -85,6 +92,22 @@ export const notifyGeneral = async (
     io.to(user._id.toString()).emit("notification", notification);
   } catch (err) {
     // ignore if socket not ready
+  }
+
+  if (shouldEmail) {
+    await sendEmail({
+      to: user.email,
+      toName: user.firstName,
+      subject: title,
+      html: generalEmailTemplate({ name: user.firstName, title, message }),
+    });
+  }
+
+  if (shouldSms && user.phone) {
+    await sendSms({
+      to: user.phone,
+      body: `${title}: ${message}`,
+    });
   }
 
   return notification;

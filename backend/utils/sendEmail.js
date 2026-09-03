@@ -105,6 +105,16 @@ const formatMoney = (amount, currency) => {
   return `${currency} ${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+export const generalEmailTemplate = ({ name, title, message }) => emailShell(`
+  <p style="margin:0 0 16px 0; color:#111827;">Hi ${name},</p>
+
+  <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:16px; margin-bottom:16px;">
+    <p style="margin:0; font-weight:bold; color:#2563eb; font-size:15px;">${title}</p>
+  </div>
+
+  <p style="margin:0; color:#111827;">${message}</p>
+`);
+
 export const transactionEmailTemplate = ({
   name,
   action,
