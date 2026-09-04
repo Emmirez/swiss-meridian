@@ -47,7 +47,7 @@ const ContactUs = () => {
     setError("");
     setSending(true);
     try {
-      await api.post("/contact", form);
+      await api.post("/auth/contact", form);
       setSubmitted(true);
     } catch (err) {
       setError(
