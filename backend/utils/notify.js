@@ -1,5 +1,9 @@
 import Notification from "../models/Notification.js";
-import { sendEmail, transactionEmailTemplate, generalEmailTemplate } from "./sendEmail.js";
+import {
+  sendEmail,
+  transactionEmailTemplate,
+  generalEmailTemplate,
+} from "./sendEmail.js";
 import { sendSms } from "./sendSms.js";
 import { getIO } from "../socket.js";
 
@@ -9,7 +13,7 @@ import { getIO } from "../socket.js";
  */
 export const notifyTransaction = async (
   user,
-  { action, amount, currency, balance, reference, date },
+  { action, amount, currency, balance, reference, date, category },
 ) => {
   const title = `Transaction: ${action} ${currency} ${amount}`;
   const message = `Your account was ${action} ${currency} ${amount}. New balance: ${currency} ${balance}. Ref: ${reference}`;
@@ -50,6 +54,7 @@ export const notifyTransaction = async (
         balance,
         reference,
         date,
+        category,
       }),
     });
   }
@@ -64,7 +69,6 @@ export const notifyTransaction = async (
 
   return notification;
 };
-
 
 /**
  * Generic notification across in-app, email, and SMS channels. The caller's

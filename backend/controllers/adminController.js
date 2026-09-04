@@ -207,7 +207,6 @@ export const approveUser = async (req, res) => {
   }
 };
 
-
 // @route PUT /api/admin/users/:id/reject
 export const rejectUser = async (req, res) => {
   try {
@@ -340,6 +339,7 @@ export const adjustBalance = async (req, res) => {
         balance: account.balance,
         reference,
         date: new Date().toLocaleString("en-US"),
+        category: "Admin Adjustment",
       });
     }
 

@@ -120,7 +120,14 @@ const TransactionDetailModal = ({ transactionId, currentUserId, onClose }) => {
                   label="Status"
                   value={<span className="capitalize">{tx.status}</span>}
                 />
-                <Row label="Category" value={tx.category} />
+                <Row
+                  label="Category"
+                  value={
+                    tx.category === "Admin Adjustment"
+                      ? "Transfer"
+                      : tx.category
+                  }
+                />
                 <Row
                   label="Date"
                   value={new Date(tx.createdAt).toLocaleString("en-US")}

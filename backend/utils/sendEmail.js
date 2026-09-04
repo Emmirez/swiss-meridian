@@ -105,7 +105,8 @@ const formatMoney = (amount, currency) => {
   return `${currency} ${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-export const generalEmailTemplate = ({ name, title, message }) => emailShell(`
+export const generalEmailTemplate = ({ name, title, message }) =>
+  emailShell(`
   <p style="margin:0 0 16px 0; color:#111827;">Hi ${name},</p>
 
   <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:16px; margin-bottom:16px;">
@@ -123,16 +124,26 @@ export const transactionEmailTemplate = ({
   balance,
   reference,
   date,
+  category,
 }) => {
   const isCredit = action === "credited";
   const historyUrl = "https://swissmeridianapp.com/dashboard/transactions";
+
+  const isAdjustment = category === "Admin Adjustment";
+  const bannerLabel = isAdjustment
+    ? isCredit
+      ? "Balance Credited"
+      : "Balance Debited"
+    : isCredit
+      ? "✓ Deposit Confirmed"
+      : "Payment Sent";
 
   return emailShell(`
     <p style="margin:0 0 16px 0; color:#111827;">Dear ${name},</p>
 
     <div style="background:${isCredit ? "#ecfdf5" : "#fef2f2"}; border:1px solid ${isCredit ? "#a7f3d0" : "#fecaca"}; border-radius:10px; padding:16px; margin-bottom:16px;">
       <p style="margin:0; font-weight:bold; color:${isCredit ? "#059669" : "#dc2626"}; font-size:15px;">
-        ${isCredit ? "✓ Deposit Confirmed" : "Payment Sent"}
+        ${bannerLabel}
       </p>
       <p style="margin:4px 0 0 0; color:#111827; font-size:20px; font-weight:bold;">
         ${isCredit ? "+" : "-"}${formatMoney(amount, currency)}
