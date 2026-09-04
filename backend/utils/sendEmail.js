@@ -46,7 +46,7 @@ const GOLD = "#C9A227";
 const SLATE = "#64748B";
 const LOGO_URL = "https://swissmeridianapp.com/logo.png";
 
-const emailShell = (bodyHtml) => `
+export const emailShell = (bodyHtml) => `
   <div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; background:#ffffff; border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden;">
 
     <!-- Header -->

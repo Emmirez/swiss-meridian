@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import api from "../api/axios";
 
 const contactInfo = [
   { icon: Mail, title: "Email", detail: "support@swissmeridianapp.com" },
@@ -38,11 +39,24 @@ const ContactUs = () => {
 
   const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  const submit = (e) => {
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const submit = async (e) => {
     e.preventDefault();
-    // This is a portfolio demo form — wire this up to a real endpoint
-    // (e.g. POST /api/support/contact) when you're ready to make it functional.
-    setSubmitted(true);
+    setError("");
+    setSending(true);
+    try {
+      await api.post("/contact", form);
+      setSubmitted(true);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Could not send your message. Please try again.",
+      );
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -106,6 +120,11 @@ const ContactUs = () => {
               <h2 className="font-bold text-navy-900 text-xl mb-2">
                 Send us a message
               </h2>
+              {error && (
+                <div className="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3">
+                  {error}
+                </div>
+              )}
               <div className="grid sm:grid-cols-2 gap-4">
                 <input
                   required
@@ -140,9 +159,10 @@ const ContactUs = () => {
               />
               <button
                 type="submit"
+                disabled={sending}
                 className="btn-primary flex items-center gap-2"
               >
-                <Send size={16} /> Send Message
+                <Send size={16} /> {sending ? "Sending..." : "Send Message"}
               </button>
             </form>
           )}

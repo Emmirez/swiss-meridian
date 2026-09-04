@@ -13,6 +13,7 @@ import {
   sendEmail,
   otpEmailTemplate,
   jointInviteEmailTemplate,
+  emailShell,
 } from "../utils/sendEmail.js";
 import { verifyTwoFactorToken } from "../utils/twoFactor.js";
 import { notifyGeneral } from "../utils/notify.js";
@@ -767,5 +768,39 @@ export const cancelJointInvite = async (req, res) => {
     return res.json({ message: "Invite cancelled" });
   } catch (error) {
     return res.status(500).json({ message: "Could not cancel invite" });
+  }
+};
+
+// @route POST /api/contact
+// Public contact form submission — no login required. Forwards the
+// message straight to the support inbox.
+export const submitContactForm = async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: "Please enter a valid email address" });
+    }
+
+    await sendEmail({
+      to: "support@swissmeridianapp.com",
+      toName: "Swiss Meridian Support",
+      subject: `Contact form: ${subject}`,
+      html: emailShell(`
+        <p style="margin:0 0 12px 0; color:#111827;"><strong>From:</strong> ${name} (${email})</p>
+        <p style="margin:0 0 12px 0; color:#111827;"><strong>Subject:</strong> ${subject}</p>
+        <div style="background:#f8fafc; border-radius:10px; padding:16px; margin-top:12px;">
+          <p style="margin:0; color:#374151; white-space:pre-wrap;">${message}</p>
+        </div>
+      `),
+    });
+
+    return res.json({ message: "Message sent successfully" });
+  } catch (error) {
+    console.error("Contact form error:", error);
+    return res.status(500).json({ message: "Could not send your message. Please try again." });
   }
 };

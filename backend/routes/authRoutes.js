@@ -11,6 +11,7 @@ import {
   resetPassword,
   getJointInvite,
   jointSignup,
+  submitContactForm,
 } from "../controllers/authController.js";
 import { protect } from "../middleware/auth.js";
 
@@ -33,6 +34,7 @@ const otpLimiter = rateLimit({
 });
 
 router.post("/register", register);
+router.post("/contact", submitContactForm);
 router.post("/verify-email", verifyEmail);
 router.post("/resend-otp", otpLimiter, resendOtp);
 router.post("/login", loginLimiter, login);
