@@ -120,7 +120,7 @@ const Help = () => {
             <div className="text-left">
               <p className="text-sm font-semibold text-navy-900">Email Us</p>
               <p className="text-xs text-slate-400">
-                support@swissmeridianbank.com
+                support@swissmeridianapp.com
               </p>
             </div>
           </a>

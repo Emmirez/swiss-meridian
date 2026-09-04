@@ -13,7 +13,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 const contactInfo = [
-  { icon: Mail, title: "Email", detail: "support@swissmeridianbank.com" },
+  { icon: Mail, title: "Email", detail: "support@swissmeridianapp.com" },
   { icon: Phone, title: "Phone", detail: "+1 (863) 333-9415" },
   {
     icon: MapPin,
