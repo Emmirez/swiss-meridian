@@ -690,12 +690,12 @@ export const inviteJointHolder = async (req, res) => {
     await sendEmail({
       to: invite.email,
       toName: invite.name,
-      subject: `You've been invited to a joint account on Well Trust Bank`,
+      subject: `You've been invited to a joint account on Swiss Meridian Bank`,
       html: jointInviteEmailTemplate({
         inviteeName: invite.name,
         primaryName: `${req.user.firstName} ${req.user.lastName}`,
         accountType: account.accountType,
-        inviteUrl: `https://welltrustapp.com/joint-signup?token=${token}`,
+        inviteUrl: `https://swissmeridianapp.com/joint-signup?token=${token}`,
       }),
     });
 
@@ -752,8 +752,13 @@ export const cancelJointInvite = async (req, res) => {
 
     // If this was the only thing making the account "joint" — no accepted
     // co-holder and no other pending invites — revert isJoint back to false.
-    const holderCount = await AccountHolder.countDocuments({ account: invite.account });
-    const remainingPendingInvites = await JointInvite.countDocuments({ account: invite.account, status: "pending" });
+    const holderCount = await AccountHolder.countDocuments({
+      account: invite.account,
+    });
+    const remainingPendingInvites = await JointInvite.countDocuments({
+      account: invite.account,
+      status: "pending",
+    });
 
     if (holderCount < 2 && remainingPendingInvites === 0) {
       await Account.findByIdAndUpdate(invite.account, { isJoint: false });
