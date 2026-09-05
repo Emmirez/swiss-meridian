@@ -33,18 +33,37 @@ export const requestCard = async (req, res) => {
     }
 
     const existing = await Card.findOne({ user: req.user._id });
-    if (existing) {
+
+    if (existing && existing.status !== "rejected") {
       return res.status(400).json({
         message: `You already have a card (status: ${existing.status})`,
       });
     }
 
-    const card = await Card.create({
-      user: req.user._id,
-      network,
-      status: "pending",
-      cardHolderName: `${req.user.firstName} ${req.user.lastName}`,
-    });
+    let card;
+    if (existing && existing.status === "rejected") {
+      // Reset the previously rejected card to a fresh pending request with
+      // the newly chosen network, rather than blocking or creating a
+      // duplicate document.
+      existing.network = network;
+      existing.status = "pending";
+      existing.cardNumber = undefined;
+      existing.cvv = undefined;
+      existing.expiryMonth = undefined;
+      existing.expiryYear = undefined;
+      existing.rejectionReason = undefined;
+      existing.requestedAt = new Date();
+      existing.reviewedAt = undefined;
+      await existing.save();
+      card = existing;
+    } else {
+      card = await Card.create({
+        user: req.user._id,
+        network,
+        status: "pending",
+        cardHolderName: `${req.user.firstName} ${req.user.lastName}`,
+      });
+    }
 
     await notifyGeneral(req.user, {
       title: "Card request submitted",
@@ -121,7 +140,9 @@ export const getCardRequests = async (req, res) => {
     // since those now live on Account, not User.
     const cardsWithAccountInfo = await Promise.all(
       cards.map(async (card) => {
-        const holderRecord = await AccountHolder.findOne({ user: card.user._id }).populate("account");
+        const holderRecord = await AccountHolder.findOne({
+          user: card.user._id,
+        }).populate("account");
         return {
           ...card.toObject(),
           user: {
@@ -131,7 +152,7 @@ export const getCardRequests = async (req, res) => {
             currency: holderRecord?.account?.currency,
           },
         };
-      })
+      }),
     );
 
     return res.json({ cards: cardsWithAccountInfo });
