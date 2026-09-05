@@ -15,7 +15,7 @@ import api from "../api/axios";
 
 const contactInfo = [
   { icon: Mail, title: "Email", detail: "support@swissmeridianapp.com" },
-  { icon: Phone, title: "Phone", detail: "+1 (863) 333-9415" },
+  { icon: Phone, title: "Phone", detail: "1-800-SWISS-01" },
   {
     icon: MapPin,
     title: "Headquarters",

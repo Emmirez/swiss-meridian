@@ -107,7 +107,7 @@ const Help = () => {
             </div>
             <div className="text-left">
               <p className="text-sm font-semibold text-navy-900">Call Us</p>
-              <p className="text-xs text-slate-400">+1 (863) 333-9415</p>
+              <p className="text-xs text-slate-400">1-800-SWISS-01</p>
             </div>
           </a>
           <a

@@ -74,7 +74,7 @@ export const emailShell = (bodyHtml) => `
     <div style="border-top:1px solid #e5e7eb; padding: 20px 28px; background:#f8fafc;">
       <p style="margin:0 0 4px 0; font-size:12px; font-weight:bold; color:${NAVY};">Swiss Meridian Bank</p>
       <p style="margin:0 0 4px 0; font-size:11px; color:${SLATE};">Rue des Alpes 141201 Geneva Switzerland</p>
-      <p style="margin:0 0 12px 0; font-size:11px; color:${SLATE};">support@swissmeridianapp.com &nbsp;·&nbsp; +1 (863) 333-9415</p>
+      <p style="margin:0 0 12px 0; font-size:11px; color:${SLATE};">support@swissmeridianapp.com &nbsp;·&nbsp; 1-800-SWISS-01</p>
       <p style="margin:0; font-size:10px; color:${SLATE}; line-height:1.5;">
         <p style="margin:16px 0 0 0; color:${SLATE}; font-size: 11px;">
       This email is provided for informational purposes only. Swiss Meridian Bank, Member FDIC. Deposits insured up to $250,000 per depositor, per ownership category.
