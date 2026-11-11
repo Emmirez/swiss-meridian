@@ -19,7 +19,7 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Headquarters",
-    detail: "Rue des Alpes 14, 1201 Geneva, Switzerland",
+    detail: "Bahnhofstrasse 45, 8001 Zurich, Switzerland",
   },
   {
     icon: Clock,
