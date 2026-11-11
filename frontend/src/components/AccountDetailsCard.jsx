@@ -2,7 +2,7 @@ import { Landmark, Copy, Check } from "lucide-react";
 import { useState } from "react";
 
 const SWISS_MERIDIAN_SWIFT = "SMBKCHZZ";
-const SWISS_MERIDIAN_ADDRESS = "Rue des Alpes 14, 1201 Geneva, Switzerland";
+const SWISS_MERIDIAN_ADDRESS = "Bahnhofstrasse 45, 8001 Zurich, Switzerland";
 
 const Row = ({ label, value, copyable }) => {
   const [copied, setCopied] = useState(false);
@@ -38,8 +38,15 @@ const Row = ({ label, value, copyable }) => {
 };
 
 const AccountDetailsCard = ({ user }) => {
-  const fullAddress = user?.address
-    ? `${user.address.street}, ${user.address.city}, ${user.address.state} ${user.address.zip}, ${user.address.country}`
+   const fullAddress = user?.address
+    ? [
+        user.address.street,
+        user.address.city,
+        [user.address.state, user.address.zip].filter(Boolean).join(" "),
+        user.address.country,
+      ]
+        .filter(Boolean)
+        .join(", ")
     : null;
 
   return (

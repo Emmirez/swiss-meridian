@@ -20,6 +20,33 @@ import { notifyGeneral } from "../utils/notify.js";
 
 const hashSsn = (ssn) => crypto.createHash("sha256").update(ssn).digest("hex");
 
+// Validates the address + ID number for any country.
+// US = 9-digit SSN, Canada = 9-digit SIN, others = 4–20 letters/numbers.
+// Returns an error message, or null if everything is valid.
+const validateAddressAndId = (address, ssn) => {
+  if (!address?.country || !address?.street || !address?.city) {
+    return "Please provide your full address and country";
+  }
+
+  const isUsOrCanada = ["United States", "Canada"].includes(address.country);
+
+  if (isUsOrCanada && (!address.state || !address.zip)) {
+    return address.country === "Canada"
+      ? "Province and postal code are required"
+      : "State and ZIP code are required";
+  }
+
+  if (isUsOrCanada) {
+    if (!/^\d{9}$/.test(ssn)) {
+      return `${address.country === "Canada" ? "SIN" : "SSN"} must be exactly 9 digits`;
+    }
+  } else if (!/^[A-Z0-9]{4,20}$/i.test(ssn)) {
+    return "ID number must be 4–20 letters or numbers";
+  }
+
+  return null;
+};
+
 // @route POST /api/auth/register
 // Creates the primary User, the Account, and links them via AccountHolder.
 // If isJoint is true, also creates a pending JointInvite and emails the
@@ -66,8 +93,9 @@ export const register = async (req, res) => {
         .json({ message: "Transaction PIN must be exactly 4 digits" });
     }
 
-    if (!/^\d{9}$/.test(ssn)) {
-      return res.status(400).json({ message: "SSN must be 9 digits" });
+      const addressError = validateAddressAndId(address, ssn);
+    if (addressError) {
+      return res.status(400).json({ message: addressError });
     }
 
     if (isJoint) {
@@ -255,8 +283,9 @@ export const jointSignup = async (req, res) => {
         .status(400)
         .json({ message: "Transaction PIN must be exactly 4 digits" });
     }
-    if (!/^\d{9}$/.test(ssn)) {
-      return res.status(400).json({ message: "SSN must be 9 digits" });
+       const addressError = validateAddressAndId(address, ssn);
+    if (addressError) {
+      return res.status(400).json({ message: addressError });
     }
 
     const invite = await JointInvite.findOne({ token });
@@ -655,7 +684,7 @@ export const inviteJointHolder = async (req, res) => {
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(409).json({
-        message: "A Well Trust Bank account already exists with that email",
+      message: "A Swiss Meridian Bank account already exists with that email", 
       });
     }
 

@@ -15,6 +15,7 @@ import api from "../api/axios";
 import TopBar from "../components/TopBar";
 import CustomSelect from "../components/CustomSelect";
 import { compressImage } from "../utils/compressImage";
+import { countryOptions, getRegionConfig } from "../utils/addressRules";
 import { useUserMenu } from "../components/DashboardLayout";
 
 const steps = [
@@ -148,14 +149,12 @@ const KycWizard = () => {
       if (!form.fullName || !form.dateOfBirth || !form.nationality)
         return setError("Please complete all required fields") ?? false;
     }
-    if (step === 2) {
-      if (
-        !form.street ||
-        !form.city ||
-        !form.state ||
-        !form.zip ||
-        !form.country
-      )
+       if (step === 2) {
+      if (!form.country)
+        return setError("Please select your country") ?? false;
+      if (!form.street || !form.city)
+        return setError("Please complete your address") ?? false;
+      if (getRegionConfig(form.country).required && (!form.state || !form.zip))
         return setError("Please complete your address") ?? false;
     }
     return true;
@@ -353,11 +352,11 @@ const KycWizard = () => {
                 onChange={(e) => update("dateOfBirth", e.target.value)}
                 className="input-field"
               />
-              <input
-                placeholder="Nationality (country of citizenship)"
+                <CustomSelect
                 value={form.nationality}
-                onChange={(e) => update("nationality", e.target.value)}
-                className="input-field"
+                onChange={(v) => update("nationality", v)}
+                options={countryOptions}
+                placeholder="Nationality (country of citizenship)"
               />
               <CustomSelect
                 value={form.gender}
@@ -368,8 +367,14 @@ const KycWizard = () => {
             </div>
           )}
 
-          {step === 2 && (
+                    {step === 2 && (
             <div className="space-y-4">
+              <CustomSelect
+                value={form.country}
+                onChange={(v) => update("country", v)}
+                options={countryOptions}
+                placeholder="Select your country"
+              />
               <input
                 placeholder="Street address"
                 value={form.street}
@@ -384,24 +389,18 @@ const KycWizard = () => {
                   className="input-field"
                 />
                 <input
-                  placeholder="State"
+                  placeholder={getRegionConfig(form.country).region}
                   value={form.state}
                   onChange={(e) => update("state", e.target.value)}
                   className="input-field"
                 />
                 <input
-                  placeholder="ZIP code"
+                  placeholder={getRegionConfig(form.country).postal}
                   value={form.zip}
                   onChange={(e) => update("zip", e.target.value)}
                   className="input-field"
                 />
               </div>
-              <input
-                placeholder="Country"
-                value={form.country}
-                onChange={(e) => update("country", e.target.value)}
-                className="input-field"
-              />
             </div>
           )}
 

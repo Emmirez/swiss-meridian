@@ -23,6 +23,14 @@ import {
 import api from "../api/axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import CustomSelect from "../components/CustomSelect";
+import {
+  countryOptions,
+  getIdConfig,
+  getRegionConfig,
+  cleanIdInput,
+  validateAddressAndId,
+} from "../utils/addressRules";
 
 const accountTypeOptions = [
   {
@@ -68,6 +76,7 @@ const Register = () => {
     phone: "",
     dateOfBirth: "",
     ssn: "",
+    country: "",
     street: "",
     city: "",
     state: "",
@@ -85,6 +94,13 @@ const Register = () => {
 
   const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
+  const idConfig = getIdConfig(form.country);
+  const regionConfig = getRegionConfig(form.country);
+
+  // Clear the ID number when the country changes, since the format differs
+  const changeCountry = (country) =>
+    setForm((f) => ({ ...f, country, ssn: "" }));
+
   const validateStep = () => {
     setError("");
     if (step === 0) {
@@ -99,13 +115,10 @@ const Register = () => {
         return false;
       }
     }
-    if (step === 1) {
-      if (!/^\d{9}$/.test(form.ssn)) {
-        setError("SSN must be exactly 9 digits");
-        return false;
-      }
-      if (!form.street || !form.city || !form.state || !form.zip) {
-        setError("Please complete your address");
+       if (step === 1) {
+      const addressError = validateAddressAndId(form);
+      if (addressError) {
+        setError(addressError);
         return false;
       }
     }
@@ -163,7 +176,8 @@ const Register = () => {
           city: form.city,
           state: form.state,
           zip: form.zip,
-        },
+          country: form.country,
+        }, 
         password: form.password,
         transactionPin: form.transactionPin,
         accountType: form.accountType,
@@ -312,41 +326,47 @@ const Register = () => {
 
             {step === 1 && (
               <div className="space-y-4">
-                <Field
-                  icon={Hash}
-                  placeholder="Social Security Number (9 digits)"
-                  value={form.ssn}
-                  onChange={(v) =>
-                    update("ssn", v.replace(/\D/g, "").slice(0, 9))
-                  }
+                <CustomSelect
+                  value={form.country}
+                  onChange={(v) => changeCountry(v)}
+                  options={countryOptions}
+                  placeholder="Select your country"
                 />
-                <Field
-                  icon={MapPin}
-                  placeholder="Street address"
-                  value={form.street}
-                  onChange={(v) => update("street", v)}
-                />
-                <div className="grid sm:grid-cols-3 gap-4">
-                  <Field
-                    placeholder="City"
-                    value={form.city}
-                    onChange={(v) => update("city", v)}
-                  />
-                  <Field
-                    placeholder="State"
-                    value={form.state}
-                    onChange={(v) => update("state", v)}
-                  />
-                  <Field
-                    placeholder="ZIP code"
-                    value={form.zip}
-                    onChange={(v) => update("zip", v)}
-                  />
-                </div>
-                <p className="text-xs text-slate-400">
-                  Your SSN is encrypted and only used to verify your identity,
-                  as required for US bank accounts.
-                </p>
+
+                {form.country && (
+                  <>
+                    <Field
+                      icon={Hash}
+                      placeholder={idConfig.label}
+                      value={form.ssn}
+                      onChange={(v) => update("ssn", cleanIdInput(v, idConfig))}
+                    />
+                    <Field
+                      icon={MapPin}
+                      placeholder="Street address"
+                      value={form.street}
+                      onChange={(v) => update("street", v)}
+                    />
+                    <div className="grid sm:grid-cols-3 gap-4">
+                      <Field
+                        placeholder="City"
+                        value={form.city}
+                        onChange={(v) => update("city", v)}
+                      />
+                      <Field
+                        placeholder={regionConfig.region}
+                        value={form.state}
+                        onChange={(v) => update("state", v)}
+                      />
+                      <Field
+                        placeholder={regionConfig.postal}
+                        value={form.zip}
+                        onChange={(v) => update("zip", v)}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400">{idConfig.note}</p>
+                  </>
+                )}
               </div>
             )}
 
@@ -419,8 +439,8 @@ const Register = () => {
                       />
                     </div>
                     <p className="text-xs text-slate-400 mt-2">
-                      The joint holder will be listed on this account but won't
-                      need to complete their own registration.
+                      We'll email them an invite to complete their own
+                      registration and join this account.
                     </p>
                   </div>
                 )}

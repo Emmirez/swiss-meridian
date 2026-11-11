@@ -4,6 +4,14 @@ import { User, Hash, MapPin, Lock, KeyRound, Phone, Calendar, ArrowRight, Eye, E
 import api from "../api/axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import CustomSelect from "../components/CustomSelect";
+import {
+  countryOptions,
+  getIdConfig,
+  getRegionConfig,
+  cleanIdInput,
+  validateAddressAndId,
+} from "../utils/addressRules";
 
 const PasswordField = ({ icon: Icon, value, onChange, ...props }) => {
   const [visible, setVisible] = useState(false);
@@ -48,6 +56,7 @@ const JointSignup = () => {
     phone: "",
     dateOfBirth: "",
     ssn: "",
+    country: "",
     street: "",
     city: "",
     state: "",
@@ -73,18 +82,24 @@ const JointSignup = () => {
       .finally(() => setLoadingInvite(false));
   }, [token]);
 
-  const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+    const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const idConfig = getIdConfig(form.country);
+  const regionConfig = getRegionConfig(form.country);
+
+  // Clear the ID number when the country changes, since the format differs
+  const changeCountry = (country) =>
+    setForm((f) => ({ ...f, country, ssn: "" }));
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!form.phone || !form.dateOfBirth || !form.ssn || !form.street || !form.city || !form.state || !form.zip) {
+    if (!form.phone || !form.dateOfBirth) {
       return setError("Please complete all fields");
     }
-    if (!/^\d{9}$/.test(form.ssn)) {
-      return setError("SSN must be exactly 9 digits");
-    }
+    const addressError = validateAddressAndId(form);
+    if (addressError) return setError(addressError);
     if (form.password.length < 8) {
       return setError("Password must be at least 8 characters");
     }
@@ -105,7 +120,13 @@ const JointSignup = () => {
         phone: form.phone,
         dateOfBirth: form.dateOfBirth,
         ssn: form.ssn,
-        address: { street: form.street, city: form.city, state: form.state, zip: form.zip },
+          address: {
+          street: form.street,
+          city: form.city,
+          state: form.state,
+          zip: form.zip,
+          country: form.country,
+        },
         password: form.password,
         transactionPin: form.transactionPin,
       });
@@ -160,7 +181,13 @@ const JointSignup = () => {
               <form onSubmit={submit} className="card p-6 md:p-8 space-y-4">
                 {error && <div className="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3">{error}</div>}
 
-                <p className="text-sm font-semibold text-navy-900">Your details</p>
+                               <p className="text-sm font-semibold text-navy-900">Your details</p>
+                <CustomSelect
+                  value={form.country}
+                  onChange={(v) => changeCountry(v)}
+                  options={countryOptions}
+                  placeholder="Country you live in"
+                />
                 <Field icon={Phone} placeholder="Phone number (e.g. +1 202 555 0100)" value={form.phone} onChange={(v) => update("phone", v)} />
                 <div>
                   <label className="text-xs text-slate-500 mb-1.5 block">Date of birth</label>
@@ -180,17 +207,18 @@ const JointSignup = () => {
                 </div>
                 <Field
                   icon={Hash}
-                  placeholder="Social Security Number (9 digits)"
+                  placeholder={form.country ? idConfig.label : "Select your country first"}
                   value={form.ssn}
-                  onChange={(v) => update("ssn", v.replace(/\D/g, "").slice(0, 9))}
+                  disabled={!form.country}
+                  onChange={(v) => update("ssn", cleanIdInput(v, idConfig))}
                 />
 
                 <p className="text-sm font-semibold text-navy-900 pt-2">Your address</p>
                 <Field icon={MapPin} placeholder="Street address" value={form.street} onChange={(v) => update("street", v)} />
                 <div className="grid sm:grid-cols-3 gap-4">
                   <Field placeholder="City" value={form.city} onChange={(v) => update("city", v)} />
-                  <Field placeholder="State" value={form.state} onChange={(v) => update("state", v)} />
-                  <Field placeholder="ZIP code" value={form.zip} onChange={(v) => update("zip", v)} />
+                  <Field placeholder={regionConfig.region} value={form.state} onChange={(v) => update("state", v)} />
+                  <Field placeholder={regionConfig.postal} value={form.zip} onChange={(v) => update("zip", v)} />
                 </div>
 
                 <p className="text-sm font-semibold text-navy-900 pt-2">Security</p>
@@ -209,9 +237,7 @@ const JointSignup = () => {
                   onChange={(v) => update("confirmPin", v.replace(/\D/g, "").slice(0, 4))}
                 />
 
-                <p className="text-xs text-slate-400">
-                  Your SSN is encrypted and only used to verify your identity, as required for US bank accounts.
-                </p>
+                <p className="text-xs text-slate-400">{idConfig.note}</p>
 
                 <button type="submit" disabled={submitting} className="btn-gold w-full flex items-center justify-center gap-2">
                   {submitting ? "Creating account..." : "Complete Registration"} <ArrowRight size={16} />

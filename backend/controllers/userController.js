@@ -448,8 +448,17 @@ export const uploadKyc = async (req, res) => {
         .status(400)
         .json({ message: "Please complete all required personal info fields" });
     }
-    if (!street || !city || !state || !zip || !country) {
+       if (!street || !city || !country) {
       return res.status(400).json({ message: "Please complete your address" });
+    }
+    // State/Province + ZIP/Postal code are only required for US and Canada
+    if (["United States", "Canada"].includes(country) && (!state || !zip)) {
+      return res.status(400).json({
+        message:
+          country === "Canada"
+            ? "Province and postal code are required"
+            : "State and ZIP code are required",
+      });
     }
     if (!employmentStatus || !sourceOfFunds) {
       return res

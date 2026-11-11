@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import api from "../../api/axios";
 import TopBar from "../../components/TopBar";
 import CustomSelect from "../../components/CustomSelect";
 import AdminTransactionEditModal from "../../components/AdminTransactionEditModal";
+import AdminTransactionDeleteModal from "../../components/AdminTransactionDeleteModal";
 import { useAdminMenu } from "../../components/AdminLayout";
 
 const typeOptions = [
@@ -27,7 +28,9 @@ const AdminTransactions = () => {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(null);
+    const [editing, setEditing] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [message, setMessage] = useState("");
 
   const loadTransactions = () => {
     setLoading(true);
@@ -67,6 +70,12 @@ const AdminTransactions = () => {
             placeholder="All types"
           />
         </div>
+
+                {message && (
+          <div className="bg-emerald-50 text-emerald-600 text-sm rounded-xl px-4 py-3 mb-4">
+            {message}
+          </div>
+        )}
 
         <div className="card overflow-x-auto">
           {loading ? (
@@ -109,13 +118,21 @@ const AdminTransactions = () => {
                     <td className="px-4 py-3 capitalize text-slate-500">
                       {tx.status}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => setEditing(tx)}
-                        className="text-navy hover:text-gold-700 transition"
-                      >
-                        <Pencil size={15} />
-                      </button>
+                                        <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => setEditing(tx)}
+                          className="text-navy hover:text-gold-700 transition"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          onClick={() => setDeleting(tx)}
+                          className="text-slate-400 hover:text-red-500 transition"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -147,16 +164,29 @@ const AdminTransactions = () => {
         )}
       </div>
 
-      {editing && (
+           {editing && (
         <AdminTransactionEditModal
           transaction={editing}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
+            setMessage("Transaction updated");
             loadTransactions();
           }}
         />
       )}
+
+      {deleting && (
+        <AdminTransactionDeleteModal
+          transaction={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={(msg) => {
+            setDeleting(null);
+            setMessage(msg);
+            loadTransactions();
+          }}
+        />
+      )} 
     </div>
   );
 };

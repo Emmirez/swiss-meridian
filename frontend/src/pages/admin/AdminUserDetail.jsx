@@ -9,10 +9,14 @@ import {
   Wallet,
   Gauge,
   Pencil,
+  Trash2,
+  MapPin,
 } from "lucide-react";
 import api from "../../api/axios";
 import TopBar from "../../components/TopBar";
 import AdminTransactionEditModal from "../../components/AdminTransactionEditModal";
+import AdminTransactionDeleteModal from "../../components/AdminTransactionDeleteModal";
+import AdminEditAddressModal from "../../components/AdminEditAddressModal";
 import { useAdminMenu } from "../../components/AdminLayout";
 
 const AdminUserDetail = () => {
@@ -34,6 +38,9 @@ const AdminUserDetail = () => {
   const { onMenuClick } = useAdminMenu();
 
   const [coHolders, setCoHolders] = useState([]);
+  const [accountId, setAccountId] = useState(null);
+  const [deletingTx, setDeletingTx] = useState(null);
+  const [editingAddress, setEditingAddress] = useState(false);
 
   const load = () => {
     api
@@ -42,6 +49,7 @@ const AdminUserDetail = () => {
         setUser(res.data.user);
         setTransactions(res.data.transactions);
         setCoHolders(res.data.coHolders || []);
+        setAccountId(res.data.account?._id || null);
         const limits = res.data.account?.limits;
         setLimitsForm({
           dailyLimit: limits?.dailyLimit ?? 500000,
@@ -143,10 +151,32 @@ const AdminUserDetail = () => {
             <p className="font-semibold text-navy-900">
               {user.currency} {user.balance?.toFixed(2)}
             </p>
-            <p className="text-xs text-slate-400 mt-3 mb-1">Status</p>
+                        <p className="text-xs text-slate-400 mt-3 mb-1">Status</p>
             <p className="font-semibold text-navy-900 capitalize">
               {user.status}
             </p>
+            <p className="text-xs text-slate-400 mt-3 mb-1">Address</p>
+            <p className="font-semibold text-navy-900 text-sm leading-snug">
+              {user.address
+                ? [
+                    user.address.street,
+                    user.address.city,
+                    [user.address.state, user.address.zip]
+                      .filter(Boolean)
+                      .join(" "),
+                    user.address.country,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")
+                : "—"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setEditingAddress(true)}
+              className="mt-3 w-full py-2 rounded-xl text-sm font-medium bg-slate-100 text-navy hover:bg-slate-200 transition flex items-center justify-center gap-1.5"
+            >
+              <MapPin size={15} /> Edit Address
+            </button>
 
             {user.isJoint && coHolders.length > 1 && (
               <div className="mt-4 pt-4 border-t border-slate-100">
@@ -353,12 +383,18 @@ const AdminUserDetail = () => {
                     <p className="font-semibold text-navy-900">
                       {tx.currency} {tx.amount?.toFixed(2)}
                     </p>
-                    <button
+                                       <button
                       onClick={() => setEditingTx(tx)}
                       className="text-navy hover:text-gold-700 transition"
                     >
                       <Pencil size={15} />
                     </button>
+                    <button
+                      onClick={() => setDeletingTx(tx)}
+                      className="text-slate-400 hover:text-red-500 transition"
+                    >
+                      <Trash2 size={15} />
+                    </button> 
                   </div>
                 </div>
               ))}
@@ -367,12 +403,39 @@ const AdminUserDetail = () => {
         </div>
       </div>
 
-      {editingTx && (
+            {editingTx && (
         <AdminTransactionEditModal
           transaction={editingTx}
+          contextAccountId={accountId}
+          contextUserId={id}
           onClose={() => setEditingTx(null)}
           onSaved={() => {
             setEditingTx(null);
+            setMessage("Transaction updated");
+            load();
+          }}
+        />
+      )}
+
+      {deletingTx && (
+        <AdminTransactionDeleteModal
+          transaction={deletingTx}
+          onClose={() => setDeletingTx(null)}
+          onDeleted={(msg) => {
+            setDeletingTx(null);
+            setMessage(msg);
+            load();
+          }}
+        />
+      )}
+
+      {editingAddress && (
+        <AdminEditAddressModal
+          user={user}
+          onClose={() => setEditingAddress(false)}
+          onSaved={() => {
+            setEditingAddress(false);
+            setMessage("Address updated");
             load();
           }}
         />

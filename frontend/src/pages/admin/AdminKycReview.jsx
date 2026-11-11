@@ -166,8 +166,24 @@ const AdminKycReview = () => {
                         <div className="grid sm:grid-cols-2 gap-4">
                           <Field label="Street" value={addr?.street} />
                           <Field label="City" value={addr?.city} />
-                          <Field label="State" value={addr?.state} />
-                          <Field label="ZIP Code" value={addr?.zip} />
+                                                    <Field
+                            label={
+                              addr?.country === "United States"
+                                ? "State"
+                                : addr?.country === "Canada"
+                                  ? "Province"
+                                  : "State / Region"
+                            }
+                            value={addr?.state}
+                          />
+                          <Field
+                            label={
+                              addr?.country === "United States"
+                                ? "ZIP Code"
+                                : "Postal Code"
+                            }
+                            value={addr?.zip}
+                          />
                           <Field label="Country" value={addr?.country} />
                         </div>
                       </div>
